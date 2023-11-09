@@ -2,41 +2,55 @@ const express = require("express");
 const webpush = require("web-push");
 const bodyParser = require("body-parser");
 const path = require("path");
+const cron = require('node-cron');
+const { createClient } = require('@supabase/supabase-js')
+const dotenv = require('dotenv');
+const { clear } = require("console");
+dotenv.config()
+
 
 const app = express();
-
-// Set static path
 app.use(express.static(path.join(__dirname, "client")));
-
 app.use(bodyParser.json());
 
-const publicVapidKey =
-  "BJthRQ5myDgc7OSXzPCMftGw-n16F7zQBEN7EUD6XxcfTTvrLGWSIG7y_JxiWtVlCFua0S8MTB5rPziBqNx1qIo";
-const privateVapidKey = "3KzvKasA2SoCxsp0iIG_o9B0Ozvl1XDwI63JRKNIWBM";
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+
+const publicVapidKey = process.env.PUBLIC_VAPID_KEY;
+const privateVapidKey = process.env.PRIVATE_VAPID_KEY;
 
 webpush.setVapidDetails(
-  "mailto:test@test.com",
-  publicVapidKey,
-  privateVapidKey
+	"mailto:test@test.com",
+	publicVapidKey,
+	privateVapidKey
 );
+const notification = {
+	title: "Cogoport 1",
+	body: "CHeck out our best rates at Cogoport ",
+	icon: "https://cdn.cogoport.io/cms-prod/cogo_public/vault/original/cogoports-new-g-logo.png",
+	scheduledTime: new Date('2023-11-09 16:16:40')
+}
 
-// Subscribe Route
-app.post("/subscribe", (req, res) => {
-  // Get pushSubscription object
-  const subscription = req.body;
+let subscriptions = []
+const getSubscriptions = async () => {
+	let { data: rows, error } = await supabase.from('subscriptions').select('*');
+	subscriptions = rows.map((row) => row.subscription_object)
+}
+getSubscriptions()
 
-  // Send 201 - resource created
-  res.status(201).json({});
+const task = cron.schedule('* * * * * *', () => {
+	const currentTime = new Date();
+	console.log(currentTime)
+	if (currentTime >= notification.scheduledTime) {
+		console.log('executed')
+		subscriptions.map((subscription) => {
+			const notificationData = JSON.stringify(notification);
+			webpush.sendNotification(subscription, notificationData)
+		})
+		task.destroy()
+	}
 
-  // Create payload
-  const payload = JSON.stringify({ title: "Push Test" });
+}, { scheduled: false })
+task.start();
 
-  // Pass object into sendNotification
-  webpush
-    .sendNotification(subscription, payload)
-    .catch(err => console.error(err));
-});
 
-const port = 5000;
-
-app.listen(port, () => console.log(`Server started on port ${port}`));
+app.listen(process.env.PORT_NUMBER, () => console.log(`Server started on port ${process.env.PORT_NUMBER}`));

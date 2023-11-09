@@ -1,10 +1,16 @@
-console.log("Service Worker Loaded...");
-
 self.addEventListener("push", e => {
-  const data = e.data.json();
-  console.log("Push Recieved...");
-  self.registration.showNotification(data.title, {
-    body: "Notified by Traversy Media!",
-    icon: "http://image.ibb.co/frYOFd/tmlogo.png"
+  const notification = e.data.json();
+
+  self.registration.showNotification(notification.title, {
+    body: notification.body,
+    icon: notification.icon
   });
+});
+
+self.addEventListener('notificationclick', function (e) {
+  const notification = e.data.json();
+  const data = JSON.parse(notification);
+  e.waitUntil(
+    clients.openWindow(data.link)
+  );
 });
