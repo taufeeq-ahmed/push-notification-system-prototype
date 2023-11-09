@@ -27,7 +27,8 @@ const notification = {
 	title: "Cogoport 1",
 	body: "CHeck out our best rates at Cogoport ",
 	icon: "https://cdn.cogoport.io/cms-prod/cogo_public/vault/original/cogoports-new-g-logo.png",
-	scheduledTime: new Date('2023-11-09 16:16:40')
+	scheduledTime: new Date('2023-11-09 16:16:40'),
+	link: 'https://www.cogoport.com/en-IN'
 }
 
 let subscriptions = []
