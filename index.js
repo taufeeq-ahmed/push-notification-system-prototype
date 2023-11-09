@@ -44,9 +44,13 @@ const task = cron.schedule('* * * * * *', () => {
 		console.log('executed')
 		subscriptions.map((subscription) => {
 			const notificationData = JSON.stringify(notification);
-			webpush.sendNotification(subscription, notificationData)
+			try {
+				webpush.sendNotification(subscription, notificationData).catch(err => console.log("Not sent"))
+				task.destroy().catch(err => console.log("Not sent"))
+			} catch (err) {
+				console.error(err)
+			}
 		})
-		task.destroy()
 	}
 
 }, { scheduled: false })
