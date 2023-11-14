@@ -23,6 +23,7 @@ webpush.setVapidDetails(
 	publicVapidKey,
 	privateVapidKey
 );
+
 const notification = {
 	title: "Cogoport 1",
 	body: "CHeck out our best rates at Cogoport ",
@@ -42,12 +43,15 @@ const task = cron.schedule('* * * * * *', () => {
 	const currentTime = new Date();
 	console.log(currentTime)
 	if (currentTime >= notification.scheduledTime) {
-		console.log('executed')
+		console.log(subscriptions)
 		subscriptions.map((subscription) => {
 			const notificationData = JSON.stringify(notification);
 			try {
-				webpush.sendNotification(subscription, notificationData).catch(err => console.log("Not sent"))
-				task.destroy().catch(err => console.log("Not sent"))
+				webpush.sendNotification(subscription, notificationData).catch(err => {
+					
+					console.log("Not sent")
+				})
+				task.stop()
 			} catch (err) {
 				console.error(err)
 			}
